@@ -1,34 +1,38 @@
 # © 2025 Kaustav Ray. All rights reserved.
 # Licensed under the MIT License.
+#
+# GitHub Actions Workflow for Temp Mail Bot
+# -----------------------------------------
+# Keeps restarting bot every hour (GitHub limitation).
 
 name: Telegram Bot
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:   # Manual trigger
   schedule:
-    - cron: "0 * * * *"   # restart every hour
+    - cron: "0 * * * *"   # Restart every hour
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Start bot for 1 hour
+      - name: Run bot with auto-restart loop
         run: |
-          echo "Starting bot for 1 hour..."
-          python bot.py &
-          BOT_PID=$!
-          sleep 3600
-          kill $BOT_PID || true
+          echo "Starting bot with auto-restart..."
+          while true; do
+            python bot.py || true
+            echo "Bot crashed or timed out. Restarting in 5s..."
+            sleep 5
+          done
